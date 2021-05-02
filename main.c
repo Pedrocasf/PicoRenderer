@@ -8,7 +8,6 @@
 #include "hardware/irq.h"
 #include "pico/scanvideo/composable_scanline.h"
 #include "pico/sync.h"
-#include "textures.h"
 #include "fixedpt.h"
 #include "models.h"
 #include "faces.h"
@@ -26,6 +25,7 @@ static Vec3 v;
 static uint8_t i;
 static fixedpt intensity;
 static fixedpt scale = FIXEDPT_ONE;
+static fixedpt depth = FIXEDPT_ONE;
 int main(void) {
     set_sys_clock_khz(250000,true);
     stdio_init_all();
@@ -35,17 +35,6 @@ int main(void) {
     sem_acquire_blocking(&video_initted);
     printf("Program started");
     while (true) {
-      int c = getchar_timeout_us(0);
-      switch (c) {
-        case ' ':
-        for(int j = 0;j<3;j++){
-          printf("x:%d\n", screen_coords[j].x);
-          printf("y:%d\n", screen_coords[j].y);
-          printf("z:%d\n", fixedpt_toint(screen_coords[j].z));
-          printf("i:%d\n", intensity);
-        }
-          break;
-      };
       scanvideo_wait_for_vblank();
       for (int y = 0;y<vga_mode.height;y++){
         scanvideo_scanline_buffer_t *scanline_buffer = scanvideo_begin_scanline_generation(true);
@@ -81,9 +70,9 @@ void render(){
       Vec3 world_coords [3] = {{0,0,0},{0,0,0},{0,0,0}};
       uint8_t face[3] = {rock_faces[i],rock_faces[i+1],rock_faces[i+2]};
       for(uint8_t j = 0; j<3;j++){
-          v.x = fixedpt_mul(rock_vertices[(face[j]*3)], scale);
-          v.y = fixedpt_mul(rock_vertices[(face[j]*3)+1],scale);
-          v.z = rock_vertices[(face[j]*3)+2];
+          v.x = rock_vertices[(face[j]*3)];
+          v.y = rock_vertices[(face[j]*3)+1];
+          v.z = rock_vertices[(face[j]*3)+2] ;
           screen_coords[j] = (Vec3i){
             fixedpt_toint(fixedpt_mul(v.x+FIXEDPT_ONE,fixedpt_fromint(WIDTH>>1))),
             fixedpt_toint(fixedpt_mul(v.y+FIXEDPT_ONE,fixedpt_fromint(HEIGHT>>1))),
@@ -91,8 +80,11 @@ void render(){
           };
           world_coords[j] = v;
       }
-      Vec3 n = cross(sub(world_coords[0], world_coords[2]), sub(world_coords[1], world_coords[0]));
-      normalize(&n);
+      Vec3 n,n0,n1;
+      sub(&n0,&world_coords[0], &world_coords[2], VEC3);
+      sub(&n1,&world_coords[1], &world_coords[0], VEC3);
+      cross(&n,&n0,&n1,VEC3);
+      normalize(&n, VEC3);
       intensity = fixedpt_mul(n.x,l.x)+fixedpt_mul(n.y,l.y)+fixedpt_mul(n.z,l.z);
       if(intensity > 0){
         uint16_t r = fixedpt_toint(fixedpt_mul(intensity, fixedpt_fromint(31))); 
@@ -103,13 +95,24 @@ void render(){
     }
     if(!gpio_get(Left)){
       //memset(zbuffer, -0x80000000, sizeof zbuffer);
-      memset(display, 0, sizeof display);
-      scale+=FIXEDPT_ONE_HALF;
+      //memset(display, 0, sizeof display);
+      scale -=1;                                                                                                                                                                                                                                            
     }
     if(!gpio_get(Right)){
       //memset(zbuffer, -0x80000000, sizeof zbuffer);
-      memset(display, 0, sizeof display);
-      scale-=FIXEDPT_ONE_HALF;
+      //memset(display, 0, sizeof display);
+      scale +=1;
     }
+    int c = getchar_timeout_us(0);
+    switch (c) {
+      case ' ':
+        for(int j = 0;j<3;j++){
+          printf("x:%d\n", screen_coords[j].x);
+          printf("y:%d\n", screen_coords[j].y);
+          printf("z:%d\n", fixedpt_toint(screen_coords[j].z));
+          printf("i:%d\n", intensity);
+        }
+          break;
+      };
   }
 }

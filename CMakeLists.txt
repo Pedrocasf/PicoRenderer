@@ -16,6 +16,7 @@ pico_sdk_init()
 add_executable(PicoRenderer
         main.c
         faces.c
+        matrix.c
         )
 target_link_libraries(PicoRenderer PRIVATE
         pico_stdlib

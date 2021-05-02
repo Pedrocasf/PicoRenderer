@@ -8,7 +8,9 @@ const uint8_t tri_faces[] = {
 /* Embedded file: tri.vertices.bin */
 const int tri_vertices_len = 9;
 const uint32_t tri_vertices[] = {
-FIXEDPT_ONE_HALF,0,FIXEDPT_TWO,FIXEDPT_ONE,FIXEDPT_ONE,FIXEDPT_TWO,0,FIXEDPT_ONE,FIXEDPT_TWO,
+0,FIXEDPT_ONE,FIXEDPT_TWO,
+-FIXEDPT_ONE,-FIXEDPT_ONE,FIXEDPT_TWO,
+FIXEDPT_ONE,-FIXEDPT_ONE,FIXEDPT_TWO,
 };
 
 /* Embedded file: assets/cube.faces.bin */
