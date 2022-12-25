@@ -17,20 +17,13 @@ Vec3 baricentro(Vec3i pts[3], Vec3i p){
         r.y = FIXEDPT_ONE;
         r.z = FIXEDPT_ONE;
     }else{
-        r.x = FIXEDPT_ONE-fixedpt_div(u.x+u.y, u.z);
-        r.y = fixedpt_div(u.y,u.z);
-        r.z = fixedpt_div(u.x,u.z);
+        r.x = fixedpt_div(u.y,u.z);
+        r.y = fixedpt_div(u.x,u.z);
+        r.z = FIXEDPT_ONE-r.x-r.y;
     };
     return r;
 };
-fixedpt max(fixedpt x, fixedpt y){
-  return (x > y) ? x : y;
-};
-fixedpt min(fixedpt x, fixedpt y)
-{
-  return (x < y) ? x : y;
-}
-void triangulo(Vec3i pts[3] ,fixedpt* zbuffer,uint16_t*display, uint16_t cor){
+void triangulo(Vec3i pts[3] ,int8_t* zbuffer,uint16_t*display, Vec2 uv[3], const unsigned char *tx, const size_t tx_len){
     Vec2i bboxmin, bboxmax, clamp;
     bboxmin.x = 0x7FFFFFFF;
     bboxmin.y = 0x7FFFFFFF;
@@ -49,15 +42,26 @@ void triangulo(Vec3i pts[3] ,fixedpt* zbuffer,uint16_t*display, uint16_t cor){
     while (p.x <= bboxmax.x){
         p.y = bboxmin.y;
         while (p.y <= bboxmax.y){
-            Vec3 bc_screen= baricentro(pts,p);
-            if(bc_screen.x>0&&bc_screen.y>0&&bc_screen.z>0){
+            Vec3 bc= baricentro(pts,p);
+            if(bc.x>0&&bc.y>0&&bc.z>0){
                 p.z = 0;
-                p.z += fixedpt_mul(pts[1].z,bc_screen.x);
-                p.z += fixedpt_mul(pts[0].z,bc_screen.y);
-                p.z += fixedpt_mul(pts[2].z,bc_screen.z);
-                if(zbuffer[p.x + (p.y * WIDTH)]<p.z){
-                    zbuffer[p.x + (p.y * WIDTH)] = p.z;
-                    display[p.x + (p.y * WIDTH)] = cor;
+                p.z += fixedpt_mul(pts[1].z,bc.x);
+                p.z += fixedpt_mul(pts[0].z,bc.y);
+                p.z += fixedpt_mul(pts[2].z,bc.z);
+                if(zbuffer[p.x + (p.y * WIDTH)]<p.z>>16){
+                    Vec2 uvf = {
+                        fixedpt_mul(bc.x,uv[0].x)+
+                        fixedpt_mul(bc.y,uv[1].x)+
+                        fixedpt_mul(bc.z,uv[2].x),
+                        fixedpt_mul(bc.x,uv[0].y)+
+                        fixedpt_mul(bc.y,uv[1].y)+
+                        fixedpt_mul(bc.z,uv[2].y),
+                    };
+                    zbuffer[p.x + (p.y * WIDTH)] = p.z>>16;
+                    size_t idx = tx_len - (fixedpt_toint(uvf.x) + ((fixedpt_toint(uvf.y)*TEXTURE_SZ))) * 2;
+                    uint16_t val = ((uint16_t)(tx[idx+1])<<8) + (uint16_t)(tx[idx]);
+                    display[p.x + (p.y * WIDTH)] = val;
+                    //printf("%x ", val);
                 }
             }
             p.y += 1;

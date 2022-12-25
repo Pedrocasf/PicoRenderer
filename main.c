@@ -11,6 +11,11 @@
 #include "fixedpt.h"
 #include "models.h"
 #include "faces.h"
+#include "tank.faces.bin.h"
+#include "tank.uvs.bin.h"
+#include "tank.vertices.bin.h"
+#include "tank.txc.bin.h"
+#include "texture.raw.h"
 #define vga_mode vga_mode_160x120_60
 const uint Left = 19;
 const uint Right = 26;
@@ -19,19 +24,19 @@ void left();
 void right();
 static semaphore_t video_initted;
 static uint16_t display[WIDTH*HEIGHT] = {0};
-static fixedpt zbuffer[WIDTH*HEIGHT] = {0};
+static int8_t zbuffer[WIDTH*HEIGHT] = {0};
 static Vec3i screen_coords[3] = {{0,0,0},{0,0,0},{0,0,0}};
 static Vec3 v;
 static uint8_t i;
 static fixedpt intensity;
-static fixedpt scale = FIXEDPT_ONE;
+static fixedpt scale = -FIXEDPT_ONE_HALF;
 static fixedpt depth = FIXEDPT_ONE;
 int main(void) {
     set_sys_clock_khz(250000,true);
     stdio_init_all();
     sem_init(&video_initted, 0, 1);
+    memset(zbuffer, -128, sizeof zbuffer);
     multicore_launch_core1(render);
-    memset(zbuffer, -0x80000000, sizeof zbuffer);
     sem_acquire_blocking(&video_initted);
     printf("Program started");
     while (true) {
@@ -66,13 +71,18 @@ void render(){
   gpio_pull_up(Right);
   Vec3 l = {0,0,FIXEDPT_ONE};
   while (1){
-    for(i = 0;i<rock_faces_len;i+=3){
+    for(i = 0;i<tank_faces_bin_size;i+=3){
       Vec3 world_coords [3] = {{0,0,0},{0,0,0},{0,0,0}};
-      uint8_t face[3] = {rock_faces[i],rock_faces[i+1],rock_faces[i+2]};
+      uint8_t face[3] = {tank_faces_bin_start[i],tank_faces_bin_start[i+1],tank_faces_bin_start[i+2]};
+      uint8_t txc[3] = {tank_txc_bin_start[i], tank_txc_bin_start[i+1], tank_txc_bin_start[i+2]};
+      Vec2 uv[3];
       for(uint8_t j = 0; j<3;j++){
-          v.x = rock_vertices[(face[j]*3)];
-          v.y = rock_vertices[(face[j]*3)+1];
-          v.z = rock_vertices[(face[j]*3)+2] ;
+          v.x = fixedpt_mul(tank_vertices_bin_start[(face[j]*3)], scale);
+          v.y = fixedpt_mul(tank_vertices_bin_start[(face[j]*3)+1], scale);
+          v.z = fixedpt_mul(tank_vertices_bin_start[(face[j]*3)+2], scale);
+          uv[j].x = fixedpt_fromint(tank_uvs_bin_start[txc[j]*2]);
+          uv[j].y = fixedpt_fromint(tank_uvs_bin_start[(txc[j]*2)+1]);
+          //printf("%x %x", uv[j].x,uv[j].y);
           screen_coords[j] = (Vec3i){
             fixedpt_toint(fixedpt_mul(v.x+FIXEDPT_ONE,fixedpt_fromint(WIDTH>>1))),
             fixedpt_toint(fixedpt_mul(v.y+FIXEDPT_ONE,fixedpt_fromint(HEIGHT>>1))),
@@ -87,32 +97,18 @@ void render(){
       normalize(&n, VEC3);
       intensity = fixedpt_mul(n.x,l.x)+fixedpt_mul(n.y,l.y)+fixedpt_mul(n.z,l.z);
       if(intensity > 0){
-        uint16_t r = fixedpt_toint(fixedpt_mul(intensity, fixedpt_fromint(31))); 
-        uint16_t g = fixedpt_toint(fixedpt_mul(intensity, fixedpt_fromint(63)))<<5; 
-        uint16_t b = fixedpt_toint(fixedpt_mul(intensity, fixedpt_fromint(31)))<<11; 
-        triangulo(screen_coords,zbuffer,display,b|g|r);
+        triangulo(screen_coords,zbuffer,display,uv,texture_raw_start, texture_raw_size);
       }
     }
     if(!gpio_get(Left)){
-      //memset(zbuffer, -0x80000000, sizeof zbuffer);
-      //memset(display, 0, sizeof display);
-      scale -=1;                                                                                                                                                                                                                                            
+      memset(zbuffer, -128, sizeof zbuffer);
+      memset(display, 0, sizeof display);
+      scale +=FIXEDPT_ONE_HALF;                                                                                                                                                                                                                                            
     }
     if(!gpio_get(Right)){
-      //memset(zbuffer, -0x80000000, sizeof zbuffer);
-      //memset(display, 0, sizeof display);
-      scale +=1;
+      memset(zbuffer, -128, sizeof zbuffer);
+      memset(display, 0, sizeof display);
+      scale -=FIXEDPT_ONE_HALF>>1;
     }
-    int c = getchar_timeout_us(0);
-    switch (c) {
-      case ' ':
-        for(int j = 0;j<3;j++){
-          printf("x:%d\n", screen_coords[j].x);
-          printf("y:%d\n", screen_coords[j].y);
-          printf("z:%d\n", fixedpt_toint(screen_coords[j].z));
-          printf("i:%d\n", intensity);
-        }
-          break;
-      };
   }
 }

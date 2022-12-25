@@ -17,6 +17,12 @@ add_executable(PicoRenderer
         main.c
         faces.c
         matrix.c
+        texture.raw.c
+        tank.uvs.bin.c
+        tank.txc.bin.c
+        tank.faces.bin.c
+        tank.vertices.bin.c
+        gourad.c
         )
 target_link_libraries(PicoRenderer PRIVATE
         pico_stdlib
@@ -26,5 +32,5 @@ target_link_libraries(PicoRenderer PRIVATE
         )
 pico_add_extra_outputs(PicoRenderer)
 
-pico_enable_stdio_uart(PicoRenderer 1)
+pico_enable_stdio_uart(PicoRenderer 0)
 pico_enable_stdio_usb(PicoRenderer 1)
