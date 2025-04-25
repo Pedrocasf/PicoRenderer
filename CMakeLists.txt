@@ -1,6 +1,21 @@
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 2.1.1)
+set(toolchainVersion 14_2_Rel1)
+set(picotoolVersion 2.1.1)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
 cmake_minimum_required(VERSION 3.12)
-set(PICO_BOARD vgaboard)
-
+set(PICO_BOARD vgaboard_2_plus_w CACHE STRING "Board type")
+set(PICO_PLATFORM rp2350)
+set(PICO_EXTRAS_FETCH_FROM_GIT 1)
 # Pull in PICO SDK (must be before project)
 include(pico_sdk_import.cmake)
 
