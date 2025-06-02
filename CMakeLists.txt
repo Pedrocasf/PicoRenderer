@@ -13,7 +13,7 @@ if (EXISTS ${picoVscode})
 endif()
 # ====================================================================================
 cmake_minimum_required(VERSION 3.12)
-set(PICO_BOARD vgaboard_2_plus_w CACHE STRING "Board type")
+set(PICO_BOARD vgaboard CACHE STRING "Board type")
 set(PICO_PLATFORM rp2350)
 set(PICO_EXTRAS_FETCH_FROM_GIT 1)
 # Pull in PICO SDK (must be before project)

@@ -29,7 +29,6 @@ static bool fragment(Vec3 bar, uint16_t* color){
 
 }
 Shader Gourad = {
-    vertex,
-    fragment,
-    
-}ç
+    &vertex,
+    &fragment,   
+};

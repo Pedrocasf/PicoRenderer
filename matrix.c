@@ -94,3 +94,9 @@ void cross(void* dst, void* src1,void* src2, int type){
         ((Vec3i*)dst)->z = (((Vec3i*)src1)->x*((Vec3i*)src2)->y) - (((Vec3i*)src1)->y*((Vec3i*)src2)->x);
     };
 };
+fixedpt max(fixedpt x, fixedpt y){
+  return (x > y) ? x : y;
+};
+fixedpt min(fixedpt x, fixedpt y){
+  return (x < y) ? x : y;
+};

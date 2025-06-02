@@ -1,3 +1,5 @@
+#ifndef MATRIX_H
+#define MATRIX_H
 #include <stdint.h>
 #include "fixedpt.h"
 #define VOID 0
@@ -41,10 +43,6 @@ void mul(void* dst, void* src1,void* src2, int type);
 fixedpt dot(void* src1,void* src2, int type);
 void sub(void*,void*,void*,int);
 void cross(void* dst, void* src1,void* src2, int type);
-fixedpt max(fixedpt x, fixedpt y){
-  return (x > y) ? x : y;
-};
-fixedpt min(fixedpt x, fixedpt y)
-{
-  return (x < y) ? x : y;
-}
+fixedpt max(fixedpt x, fixedpt y);
+fixedpt min(fixedpt x, fixedpt y);
+#endif

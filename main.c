@@ -33,12 +33,12 @@ static fixedpt intensity;
 static fixedpt scale = -FIXEDPT_ONE_HALF;
 static fixedpt depth = FIXEDPT_ONE;
 int main(void) {
-    set_sys_clock_khz(250000,true);
+    //set_sys_clock_khz(150000,true);
     stdio_init_all();
     sem_init(&video_initted, 0, 1);
     memset(zbuffer, -128, sizeof zbuffer);
     multicore_launch_core1(render);
-    sem_acquire_blocking(&video_initted);
+    //sem_acquire_blocking(&video_initted);
     printf("Program started");
     while (true) {
       scanvideo_wait_for_vblank();
