@@ -16,6 +16,7 @@
 #include "tank.vertices.bin.h"
 #include "tank.txc.bin.h"
 #include "texture.raw.h"
+#include "hardware/clocks.h"
 #define vga_mode vga_mode_160x120_60
 const uint Left = 19;
 const uint Right = 26;
